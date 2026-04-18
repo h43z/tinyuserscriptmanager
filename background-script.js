@@ -12,9 +12,13 @@
   console.log(`The fetched config is`, config)
 
   const cache = []
+  const urlMatches = []
   for (const pattern in config){
     // pre create the regex object
     const regex = new RegExp(pattern)
+    // store patterns to pass to browser.webNavigation.onCommitted,
+    // this way we check events which are necessary
+    urlMatches.push({ urlMatches: pattern})
     // store it at first index
     const cached = [regex]
     // fetch the individual userscripts sequentially
@@ -31,6 +35,8 @@
   browser.webNavigation.onCommitted.addListener(async (details) => {
     // ignore iframes
     if (details.frameId !== 0) return
+
+    console.log('One of WebNavigation URL filter matched, need to check which one')
 
     for (const cached of cache){
       if (!cached[0].test(details.url)) continue
@@ -83,6 +89,10 @@
         })
       }
     }
-  })
+  },
+    {
+      url: urlMatches
+    }
+  )
 })()
 
